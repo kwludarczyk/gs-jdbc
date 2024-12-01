@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Customer Management</title>
+  <style>
+    body {
+      background-color: #383838;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    input,
+    button {
+      margin: 5px;
+      padding: 10px;
+      border-radius: 5px;
+      border: none;
+      font-size: 16px;
+    }
+
+    button {
+      background-color: #5cb85c;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #4cae4c;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: min(720px, 100%);
+    }
+
+    th,
+    td {
+      border: 1px solid #ffffff;
+      padding: 10px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #5cb85c;
+      color: white;
+    }
+
+    tr:nth-child(even) {
+      background-color: #505050;
+    }
+
+    tr:nth-child(odd) {
+      background-color: #606060;
+    }
+
+    form {
+    display: flex;
+    flex-direction: column;
+      width: min(720px, 100%);
+    }
+
+    .page-content{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+<main class="page-content">
+  <h1>Customer Management</h1>
+
+  <!-- Search Section -->
+  <section>
+    <h2>Search Customers</h2>
+    <form onsubmit="event.preventDefault(); getData();">
+      <label for="firstname-input">Firstname:</label>
+      <input id="firstname-input" placeholder="Enter firstname" />
+
+      <label for="lastname-input">Lastname:</label>
+      <input id="lastname-input" placeholder="Enter lastname" />
+
+      <label for="index-input">Index:</label>
+      <input id="index-input" placeholder="Enter index" type="number" />
+
+      <button type="submit">Search</button>
+    </form>
+  </section>
+
+  <!-- Create Section -->
+  <section>
+    <h2>Create Customer</h2>
+    <form onsubmit="event.preventDefault(); createCustomer();">
+      <label for="create-firstname">Firstname:</label>
+      <input id="create-firstname" placeholder="Enter firstname" />
+
+      <label for="create-lastname">Lastname:</label>
+      <input id="create-lastname" placeholder="Enter lastname" />
+
+      <label for="create-index">Index:</label>
+      <input id="create-index" placeholder="Enter index" type="number" />
+
+      <button type="submit">Create</button>
+    </form>
+  </section>
+
+  <!-- Update Section -->
+  <section>
+    <h2>Update Customer</h2>
+    <form onsubmit="event.preventDefault(); updateCustomer();">
+      <label for="update-id">Customer ID:</label>
+      <input id="update-id" placeholder="Enter customer ID" type="number" />
+
+      <label for="update-firstname">Firstname:</label>
+      <input id="update-firstname" placeholder="Enter firstname" />
+
+      <label for="update-lastname">Lastname:</label>
+      <input id="update-lastname" placeholder="Enter lastname" />
+
+      <label for="update-index">Index:</label>
+      <input id="update-index" placeholder="Enter index" type="number" />
+
+      <button type="submit">Update</button>
+    </form>
+  </section>
+
+  <!-- Delete Section -->
+  <section>
+    <h2>Delete Customer</h2>
+    <form onsubmit="event.preventDefault(); deleteCustomer();">
+      <label for="delete-id">Customer ID:</label>
+      <input id="delete-id" placeholder="Enter customer ID" type="number" />
+
+      <button type="submit">Delete</button>
+    </form>
+  </section>
+
+  <!-- Results Table -->
+  <table id="results-table">
+    <thead>
+    <tr>
+      <th>ID</th>
+      <th>Firstname</th>
+      <th>Lastname</th>
+      <th>Index</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</main>
+
+<script>
+  const baseUrl = "http://localhost:8080/customers";
+
+  async function getData() {
+    clearOutput();
+
+    const firstname = document.getElementById("firstname-input").value;
+    const lastname = document.getElementById("lastname-input").value;
+    const index = document.getElementById("index-input").value;
+
+    const params = new URLSearchParams();
+    if (firstname) params.append("firstname", firstname);
+    if (lastname) params.append("lastname", lastname);
+    if (index) params.append("index", index);
+
+    try {
+      const response = await fetch(`${baseUrl}?${params.toString()}`);
+      if (!response.ok) throw new Error(`Error: ${response.status}`);
+      const customers = await response.json();
+      renderTable(customers);
+    } catch (error) {
+      console.error("Failed to fetch data:", error.message);
+    }
+  }
+
+  async function createCustomer() {
+    const customer = {
+      firstName: document.getElementById("create-firstname").value,
+      lastName: document.getElementById("create-lastname").value,
+      index: document.getElementById("create-index").value,
+    };
+
+    try {
+      const response = await fetch('http://localhost:8080/customers', {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(customer),
+      });
+      alert(await response.text());
+    } catch (error) {
+      console.error("Failed to create customer:", error.message);
+    }
+  }
+
+  async function updateCustomer() {
+    const id = document.getElementById("update-id").value;
+    const customer = {
+      firstName: document.getElementById("update-firstname").value,
+      lastName: document.getElementById("update-lastname").value,
+      index: document.getElementById("update-index").value,
+    };
+
+    try {
+      const response = await fetch(`${baseUrl}/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(customer),
+      });
+      alert(await response.text());
+    } catch (error) {
+      console.error("Failed to update customer:", error.message);
+    }
+  }
+
+  async function deleteCustomer() {
+    const id = document.getElementById("delete-id").value;
+
+    try {
+      const response = await fetch(`${baseUrl}/${id}`, { method: "DELETE" });
+      alert(await response.text());
+    } catch (error) {
+      console.error("Failed to delete customer:", error.message);
+    }
+  }
+
+  function renderTable(customers) {
+    const tableBody = document.getElementById("results-table").querySelector("tbody");
+    customers.forEach((customer) => {
+      const row = document.createElement("tr");
+
+      row.innerHTML = `
+        <td>${customer.id || "-"}</td>
+        <td>${customer.firstName || "-"}</td>
+        <td>${customer.lastName || "-"}</td>
+        <td>${customer.index !== null ? customer.index : "-"}</td>
+      `;
+
+      tableBody.appendChild(row);
+    });
+  }
+
+  function clearOutput() {
+    const tableBody = document.getElementById("results-table").querySelector("tbody");
+    tableBody.innerHTML = "";
+  }
+</script>
+</body>
+</html>
